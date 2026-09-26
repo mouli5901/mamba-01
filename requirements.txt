@@ -9,6 +9,7 @@ psycopg2-binary
 pandas
 pandas-ta
 xgboost
+scikit-learn
 langgraph
 langchain-anthropic
 langchain-openai
