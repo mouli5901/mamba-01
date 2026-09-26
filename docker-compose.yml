@@ -1,0 +1,73 @@
+version: "3.9"
+
+services:
+  # ── Infrastructure ──────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  timescaledb:
+    image: timescale/timescaledb-ha:pg16
+    environment:
+      POSTGRES_USER: kite
+      POSTGRES_PASSWORD: kite
+      POSTGRES_DB: kite
+    ports:
+      - "5432:5432"
+    volumes:
+      - tsdb_data:/home/postgres/pgdata/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kite -d kite"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── Application ─────────────────────────────────────────────
+  api:
+    build: .
+    command: uvicorn core.api:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    env_file: .env
+    volumes:
+      - .:/app
+      - ./data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+      timescaledb:
+        condition: service_healthy
+
+  worker:
+    build: .
+    command: celery -A core.celery_app worker --loglevel=info --concurrency=2
+    env_file: .env
+    volumes:
+      - .:/app
+      - ./data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+      timescaledb:
+        condition: service_healthy
+
+  dashboard:
+    build: .
+    command: streamlit run dashboard/app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    env_file: .env
+    volumes:
+      - .:/app
+      - ./data:/app/data
+    depends_on:
+      - api
+
+volumes:
+  tsdb_data:

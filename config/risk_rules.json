@@ -1,0 +1,18 @@
+{
+  "max_capital_per_trade_pct": 0.02,
+  "max_concurrent_positions": 5,
+  "max_daily_loss_pct": 0.05,
+  "max_consecutive_losses": 4,
+  "heartbeat_stale_seconds": 30,
+  "slippage_pct": 0.0002,
+  "bid_ask_spread_estimate": 0.0001,
+  "fees": {
+    "stt_pct": 0.001,
+    "exchange_txn_pct": 0.0000345,
+    "sebi_turnover_pct": 0.000001,
+    "stamp_duty_pct": 0.00003,
+    "gst_pct": 0.18,
+    "brokerage_per_order": 20.0
+  },
+  "initial_capital": 100000.0
+}
