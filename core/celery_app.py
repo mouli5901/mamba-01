@@ -6,6 +6,8 @@ Handles asynchronous tick batch flushing, EOD audit runs, and periodic reconcili
 from __future__ import annotations
 
 import logging
+from typing import Any, Dict, List
+
 from celery import Celery
 
 from config.settings import CELERY_BROKER_URL, CELERY_RESULT_BACKEND
@@ -28,19 +30,21 @@ celery_app.conf.update(
 
 
 @celery_app.task(name="flush_ticks_batch_task")
-def flush_ticks_batch_task(ticks):
+def flush_ticks_batch_task(ticks: List[Dict[str, Any]]) -> int:
     """Background task to batch-insert ticks into TimescaleDB without blocking the tick stream."""
     from core.db import insert_ticks_batch
+
     count = insert_ticks_batch(ticks)
     logger.info(f"[Celery Worker] Flushed {count} ticks to TimescaleDB.")
     return count
 
 
 @celery_app.task(name="reconciliation_task")
-def reconciliation_task():
+def reconciliation_task() -> Dict[str, Any]:
     """Periodic job running every N minutes to diff broker positions against internal ledger."""
-    from core.paper_engine import PaperTradingEngine
     from core.broker_execution import BrokerExecutionEngine
+    from core.paper_engine import PaperTradingEngine
+
     paper = PaperTradingEngine()
     broker = BrokerExecutionEngine()
     result = broker.reconcile_positions(paper.get_positions())
@@ -49,9 +53,10 @@ def reconciliation_task():
 
 
 @celery_app.task(name="daily_audit_task")
-def daily_audit_task():
+def daily_audit_task() -> Dict[str, Any]:
     """Scheduled task running at market close to generate retrospective audit report."""
     from core.audit_agent import AuditAgent
+
     auditor = AuditAgent()
     summary = auditor.generate_daily_audit()
     logger.info(f"[Celery Worker] Daily audit report generated: win_rate={summary.win_rate_pct}%")

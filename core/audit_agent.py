@@ -147,13 +147,14 @@ class AuditAgent:
         consensus_decisions = [d for d in decisions if d.get("consensus_reached")]
         consensus_alignment = (len(consensus_decisions) / len(decisions) * 100.0) if decisions else 0.0
 
-        # Executive narrative summary
+        best_agent = max(agent_accuracy.keys(), key=lambda k: agent_accuracy[k]) if agent_accuracy else "none"
+        best_acc = agent_accuracy.get(best_agent, 0.0)
         narrative = (
             f"End-of-Day Audit Report for {target_date}: Completed {total_trades} orders across "
             f"{len(round_trips)} round-trip positions with a win rate of {win_rate:.1f}% and net P&L of ₹{net_pnl:+,.2f}. "
             f"Total exchange fees and taxes paid: ₹{total_fees:,.2f}. "
             f"Consensus gate triggered on {consensus_alignment:.1f}% of market signals. "
-            f"Top performing council advisor: {max(agent_accuracy, key=agent_accuracy.get)} ({max(agent_accuracy.values())}% accuracy)."
+            f"Top performing council advisor: {best_agent} ({best_acc}% accuracy)."
         )
 
         audit_summary = TradeAuditSummary(
