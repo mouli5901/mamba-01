@@ -1,4 +1,4 @@
-# AI Council Trading Engine (Google Antigravity)
+# AI Council Trading Engine
 
 An AI-driven trading engine built with FastAPI, Celery, LangGraph, Streamlit, TimescaleDB, and Redis.
 
